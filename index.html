@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ResiKu � Cetak Resi (LocalStorage)</title>
+<title>ResiKu — Cetak Resi (LocalStorage, FINAL)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0d10;--panel:#0f1318;--muted:#8b9bb3;--text:#e9eef7;--brand:#7c5cff;--brand2:#00e0a4;--border:rgba(255,255,255,.08);--danger:#ff6b6b;--shadow:0 12px 36px rgba(0,0,0,.35)}
+:root{--bg:#0b0d10;--panel:#0f1318;--muted:#8b9bb3;--text:#e9eef7;--brand:#7c5cff;--brand2:#00e0a4;--border:rgba(255,255,255,.08);--danger:#ff6b6b;--ok:#29d17e;--shadow:0 12px 36px rgba(0,0,0,.35)}
 *{box-sizing:border-box}
 body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);background:
 radial-gradient(900px 550px at 110% 10%, rgba(0,224,164,.12), transparent 50%),var(--bg);line-height:1.5}
@@ -15,6 +15,9 @@ radial-gradient(900px 550px at 110% 10%, rgba(0,224,164,.12), transparent 50%),v
 .nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tab{border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer}
 .tab.active{background:linear-gradient(90deg,var(--brand),var(--brand2));border:none;color:#fff;font-weight:800}
+.badge{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:999px;font-size:12px}
+.badge.ok{border-color:rgba(41,209,126,.5);background:rgba(41,209,126,.08);color:#c9ffe6}
+.badge.err{border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.08);color:#ffd6d6}
 .container{max-width:1200px;margin:0 auto;padding:16px}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
 .grid{display:grid;gap:16px;grid-template-columns:1.1fr .9fr}
@@ -40,23 +43,23 @@ button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) sc
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left}
 .table th{color:var(--muted);font-weight:600}
-.badge{display:inline-block;padding:3px 8px;border:1px solid var(--border);border-radius:999px;font-size:12px}
 .hidden{display:none !important}
 @media print{body>*:not(#printOnly){display:none !important}}
 </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">Resi<span class="dot">Ku</span> � Local</div>
+    <div class="brand">Resi<span class="dot">Ku</span> — Local</div>
     <div class="nav">
-      <button class="tab active" id="tabMake">Buat Label</button>
-      <button class="tab" id="tabHistory">Riwayat</button>
+      <button class="tab active" id="tabMake" type="button">Buat Label</button>
+      <button class="tab" id="tabHistory" type="button">Riwayat</button>
+      <span id="lsStatus" class="badge">Memeriksa storage…</span>
       <span style="flex:1"></span>
-      <a href="admin.html" class="btn-ghost"> Admin</a>
-      <button id="saveLocalBtn" class="btn-ghost"> Simpan</button>
-      <button id="printBtn" class="btn-ghost"> Cetak</button>
-      <button id="dlPngBtn" class="btn-ghost"> PNG</button>
-      <button id="resetBtn" class="btn-danger"> Reset Riwayat</button>
+      <a href="admin.html" class="btn-ghost">🔐 Admin</a>
+      <button id="saveLocalBtn" class="btn-ghost" type="button">💾 Simpan</button>
+      <button id="printBtn" class="btn-ghost" type="button">🖨 Cetak</button>
+      <button id="dlPngBtn" class="btn-ghost" type="button">⬇️ PNG</button>
+      <button id="resetBtn" class="btn-danger" type="button">↺ Reset Riwayat</button>
     </div>
   </header>
 
@@ -78,7 +81,7 @@ button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) sc
             </label>
           </div>
 
-          <!-- QR TRACKING DIHAPUS, QR RESI TETAP DICETAK -->
+          <!-- (kolom QR Tracking DIHAPUS, hanya QR resi yang dicetak) -->
 
           <h3 style="margin:12px 0 6px">Pengirim</h3>
           <div class="row">
@@ -136,8 +139,8 @@ button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) sc
           <div class="row">
             <label>Ukuran Kertas Saat Cetak (PC)
               <select id="paper">
-                <option value="10x15" selected>Thermal 10�15 cm</option>
-                <option value="a6">A6 (10.5�14.8 cm)</option>
+                <option value="10x15" selected>Thermal 10×15 cm</option>
+                <option value="a6">A6 (10.5×14.8 cm)</option>
               </select>
             </label>
             <label>Nomor Resi (otomatis bila kosong)
@@ -146,9 +149,9 @@ button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) sc
           </div>
 
           <div class="actions" style="justify-content:flex-end">
-            <button id="previewBtn" class="btn-primary">Perbarui Preview</button>
+            <button id="previewBtn" class="btn-primary" type="button">Perbarui Preview</button>
           </div>
-          <p class="small center">Langkah: Perbarui Preview  ketuk gambar preview  Cetak / Download / Simpan.</p>
+          <p class="small center">Perbarui Preview → klik gambar → Cetak / Download / Simpan.</p>
         </section>
 
         <!-- PREVIEW -->
@@ -156,10 +159,10 @@ button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) sc
           <div class="preview-head">
             <h2 style="margin:0">Preview Label</h2>
             <div class="actions">
-              <button id="quickResiBtn" class="btn-ghost"> Auto Resi</button>
-              <button id="printBtn2"> Cetak</button>
-              <button id="dlPngBtn2" class="btn-ghost"> PNG</button>
-              <button id="saveLocalBtn2" class="btn-ghost"> Simpan</button>
+              <button id="quickResiBtn" class="btn-ghost" type="button">⚡ Auto Resi</button>
+              <button id="printBtn2" type="button">🖨 Cetak</button>
+              <button id="dlPngBtn2" class="btn-ghost" type="button">⬇️ PNG</button>
+              <button id="saveLocalBtn2" class="btn-ghost" type="button">💾 Simpan</button>
             </div>
           </div>
           <div class="preview-info">Klik gambar di bawah untuk cetak cepat.</div>
@@ -170,7 +173,7 @@ button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) sc
       </div>
 
       <div class="card center small">
-        PC: pilih kertas <b>100�150 mm</b> atau <b>A6</b> saat print. HP: gunakan <b>Download PNG</b> agar proporsional.
+        PC: pilih kertas <b>100×150 mm</b> atau <b>A6</b> saat print. HP: paling stabil **Download PNG** lalu cetak dari Galeri/Printer app.
       </div>
     </div>
 
@@ -179,9 +182,9 @@ button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) sc
       <section class="card">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
           <input id="histSearch" placeholder="Cari resi / brand..." style="flex:1 1 240px">
-          <button id="histRefresh" class="btn-ghost"> Refresh</button>
-          <button id="exportJson" class="btn-ghost"> Export JSON</button>
-          <label class="btn-ghost" style="cursor:pointer"> Import JSON
+          <button id="histRefresh" class="btn-ghost" type="button">🔄 Refresh</button>
+          <button id="exportJson" class="btn-ghost" type="button">⬇️ Export JSON</button>
+          <label class="btn-ghost" style="cursor:pointer">⬆️ Import JSON
             <input id="importJson" type="file" accept="application/json" style="display:none">
           </label>
         </div>
@@ -200,15 +203,30 @@ button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) sc
 
 <div id="printOnly"></div>
 
-<!-- ====== qrcode.js mini (untuk QR RESI) ====== -->
+<!-- qrcode.js mini (untuk QR RESI) -->
 <script>
 /*! qrcode.js v1.0.0 (MIT) | https://github.com/davidshimjs/qrcodejs */
-!function(o){function r(o){this.mode=t.MODE_8BIT_BYTE,this.data=o}function e(o,r){this.typeNumber=o,this.errorCorrectLevel=r,this.modules=null,this.moduleCount=0,this.dataCache=null,this.dataList=[]}function n(){this.buffer=[],this.length=0}function i(){var o=0,r=0,e=0,n=new Array;return{get:function(){if(e>=o){var i=0;for(r=0;r<256;r++)i^=Math.random()*256|0;n=t.getBCHDigit(i)<<24|i,e=0,o=32}var a=1&n>>o;return o++,a}}}var t=function(){var o=function(o){var r=0;for(;0!=o;)r++,o>>>=1;return r};return{stringToBytes:function(o){for(var r=[],e=0;e<o.length;e++){var n=o.charCodeAt(e);n<128?r.push(n):n<2048?(r.push(192|(n>>6&31)),r.push(128|(63&n))):n<55296||n>=57344?(r.push(224|(n>>12&15)),r.push(128|(n>>6&63)),r.push(128|(63&n))):(e++,n=65536+((1023&n)<<10|1023&o.charCodeAt(e)),r.push(240|(n>>18&7)),r.push(128|(n>>12&63)),r.push(128|(n>>6&63)),r.push(128|(63&n)))}return r},getBCHDigit:o,MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8,ErrorCorrectLevel:{L:1,M:0,Q:3,H:2}}}();r.prototype={getLength:function(){return t.stringToBytes(this.data).length},write:function(o){for(var r=t.stringToBytes(this.data),e=0;e<r.length;e++)o.put(r[e],8)}};var a={PATTERN_POSITION_TABLE:[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],G15:1335,G18:7973,G15_MASK:21522,getBCHDigit:function(o){for(var r=0;0!=o;)r++,o>>>=1;return r},getPatternPosition:function(o){return a.PATTERN_POSITION_TABLE[o-1]},maskPattern:function(o,r,e){switch(o){case 0:return(r+e)%2==0;case 1:return r%2==0;case 2:return e%3==0;case 3:return(r+e)%3==0;case 4:return(Math.floor(r/2)+Math.floor(e/3))%2==0;case 5:return r*e%2+ r*e%3==0;case 6:return (r*e%2 + r*e%3)%2==0;case 7:return ((r*e%3 + (r+e)%2)%2)==0;default:throw new Error("bad maskPattern:"+o)}},getErrorCorrectPolynomial:function(o){for(var r=new s([1],0),e=0;e<o;e++)r=r.multiply(new s([1,d.gexp(e)],0));return r},getLengthInBits:function(o,r){if(1<=r&&r<10)switch(o){case t.MODE_NUMBER:return 10;case t.MODE_ALPHA_NUM:return 9;case t.MODE_8BIT_BYTE:return 8;case t.MODE_KANJI:return 8;default:throw new Error("mode:"+o)}else if(r<27)switch(o){case t.MODE_NUMBER:return 12;case t.MODE_ALPHA_NUM:return 11;case t.MODE_8BIT_BYTE:return 16;case t.MODE_KANJI:return 10;default:throw new Error("mode:"+o)}}};n.prototype={get:function(o){var r=Math.floor(o/8);return 1==(this.buffer[r]>>>7-o%8&1)},put:function(o,r){for(var e=0;e<r;e++)this.putBit(1==(o>>>r-e-1&1))},getLengthInBits:function(){return this.length},putBit:function(o){this.buffer[this.length>>3]|=o?128>>>(this.length&7):0,this.length++}};o.QRCode=e}(window);
+!function(o){function r(o){this.mode=t.MODE_8BIT_BYTE,this.data=o}function e(o,r){this.typeNumber=o,this.errorCorrectLevel=r,this.modules=null,this.moduleCount=0,this.dataCache=null,this.dataList=[]}function n(){this.buffer=[],this.length=0}function i(){var o=0,r=0,e=0,n=new Array;return{get:function(){if(e>=o){var i=0;for(r=0;r<256;r++)i^=Math.random()*256|0;n=t.getBCHDigit(i)<<24|i,e=0,o=32}var a=1&n>>o;return o++,a}}}var t=function(){var o=function(o){var r=0;for(;0!=o;)r++,o>>>=1;return r};return{stringToBytes:function(o){for(var r=[],e=0;e<o.length;e++){var n=o.charCodeAt(e);n<128?r.push(n):n<2048?(r.push(192|(n>>6&31)),r.push(128|(63&n))):n<55296||n>=57344?(r.push(224|(n>>12&15)),r.push(128|(n>>6&63)),r.push(128|(63&n))):(e++,n=65536+((1023&n)<<10|1023&o.charCodeAt(e)),r.push(240|(n>>18&7)),r.push(128|(n>>12&63)),r.push(128|(n>>6&63)),r.push(128|(63&n)))}return r},getBCHDigit:o,MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8,ErrorCorrectLevel:{L:1,M:0,Q:3,H:2}}}();r.prototype={getLength:function(){return t.stringToBytes(this.data).length},write:function(o){for(var r=t.stringToBytes(this.data),e=0;e<r.length;e++)o.put(r[e],8)}};o.QRCode=e}(window);
 </script>
 
-<!-- ====== APP SCRIPT (LocalStorage) ====== -->
+<!-- APP (LocalStorage) -->
 <script>
-/* ===== Utilities ===== */
+/* ===== LocalStorage Self-check ===== */
+function localStorageAvailable(){
+  try{
+    const x='__ls_test__'+Math.random();
+    localStorage.setItem(x,x);
+    const ok = localStorage.getItem(x)===x;
+    localStorage.removeItem(x);
+    return ok;
+  }catch(e){ return false; }
+}
+const lsOK = localStorageAvailable();
+const lsStatus = document.getElementById('lsStatus');
+if(lsOK){ lsStatus.textContent='LocalStorage OK'; lsStatus.classList.add('ok'); }
+else { lsStatus.textContent='LocalStorage TIDAK tersedia (aktifkan storage / jangan mode private ketat)'; lsStatus.classList.add('err'); }
+
+/* ===== Helpers ===== */
 const $ = (s,el=document)=>el.querySelector(s);
 const C = $('#previewCanvas');
 const CTX = C.getContext('2d',{willReadFrequently:true});
@@ -228,17 +246,17 @@ function drawQR(ctx, text, x, y, size){
 
 /* ===== Logo input ===== */
 let brandLogoImg=null;
-$('#brandLogo').addEventListener('change',(e)=>{const f=e.target.files?.[0]; if(!f){brandLogoImg=null; return;} const img=new Image(); img.onload=()=>{brandLogoImg=img; render();}; img.src=URL.createObjectURL(f);});
+$('#brandLogo')?.addEventListener('change',(e)=>{const f=e.target.files?.[0]; if(!f){brandLogoImg=null; return;} const img=new Image(); img.onload=()=>{brandLogoImg=img; render();}; img.src=URL.createObjectURL(f);});
 
 /* ===== Render ===== */
 function render(){
   const brand = $('#brandName').value.trim() || 'ResiKu';
-  const sName = $('#senderName').value.trim() || '�';
-  const sPhone= $('#senderPhone').value.trim() || '�';
-  const sAddr = $('#senderAddress').value.trim() || '�';
-  const bName = $('#buyerName').value.trim() || '�';
-  const bPhone= $('#buyerPhone').value.trim() || '�';
-  const bAddr = $('#buyerAddress').value.trim() || '�';
+  const sName = $('#senderName').value.trim() || '—';
+  const sPhone= $('#senderPhone').value.trim() || '—';
+  const sAddr = $('#senderAddress').value.trim() || '—';
+  const bName = $('#buyerName').value.trim() || '—';
+  const bPhone= $('#buyerPhone').value.trim() || '—';
+  const bAddr = $('#buyerAddress').value.trim() || '—';
   const courier = $('#courier').value;
   const service = $('#service').value;
   const items = Math.max(1,+($('#items').value||1));
@@ -296,7 +314,7 @@ function render(){
   CTX.textAlign='left';  CTX.font='700 18px Inter, Arial'; CTX.fillText('Berat', metaX+16, midY+108);
   CTX.textAlign='right'; CTX.font='600 18px Inter, Arial'; CTX.fillText(weight+' g', metaX+rightW-16, midY+108);
   CTX.textAlign='left';  CTX.font='700 18px Inter, Arial'; CTX.fillText('Catatan', metaX+16, midY+146);
-  CTX.textAlign='right'; CTX.font='600 18px Inter, Arial'; const noteTrim = note.length>40 ? note.slice(0,37)+'�' : note; CTX.fillText(noteTrim, metaX+rightW-16, midY+146);
+  CTX.textAlign='right'; CTX.font='600 18px Inter, Arial'; const noteTrim = note.length>40 ? note.slice(0,37)+'…' : note; CTX.fillText(noteTrim, metaX+rightW-16, midY+146);
   CTX.textAlign='left';
 
   // divider + barcode
@@ -305,43 +323,52 @@ function render(){
   drawBarcode(CTX, codeRaw, pad, bcY, 960-2*pad, 120);
   CTX.font='700 20px "Courier New", ui-monospace, monospace'; CTX.textAlign='center'; CTX.fillText(codeRaw, 500, bcY+140); CTX.textAlign='left';
 
-  // QR RESI (isi QR = teks nomor resi), pojok kanan bawah
+  // QR RESI (isi QR = teks nomor resi)
   const size=180, x=960-40-size, y=1460-size-24;
   drawQR(CTX, resi, x, y, size);
 
   return { pngURL: C.toDataURL('image/png'), resi, courier, service, brand, items, weight, note, date: now };
 }
 
-/* ===== Print & Download ===== */
-function printImage(){
-  const { pngURL } = render();
+/* ===== Cetak via hidden iframe ===== */
+function printPNG(pngURL){
   const paper = $('#paper').value;
   const css = (paper==='a6') ? '@page{size:A6;margin:0}img{width:105mm;height:148mm}' : '@page{size:100mm 150mm;margin:0}img{width:100mm;height:150mm}';
-  const w = window.open('', '_blank', 'noopener');
-  w.document.write(`<html><head><meta charset="utf-8"><title>Print Label</title><style>html,body{margin:0}${css}</style></head><body><img src="${pngURL}" onload="window.focus();window.print();" /></body></html>`); 
-  w.document.close();
+  const iframe = document.createElement('iframe');
+  iframe.style.position='fixed'; iframe.style.right='0'; iframe.style.bottom='0'; iframe.style.width='0'; iframe.style.height='0'; iframe.style.border='0';
+  document.body.appendChild(iframe);
+  iframe.onload = () => {
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`<html><head><meta charset="utf-8"><style>html,body{margin:0}${css}</style></head><body><img src="${pngURL}" onload="setTimeout(()=>window.print(),50)"></body></html>`);
+    doc.close();
+    setTimeout(()=>document.body.removeChild(iframe), 5000);
+  };
+  iframe.src = 'about:blank';
 }
-function downloadPNG(){
-  const { pngURL, resi } = render();
-  const a=document.createElement('a'); a.download=`label-${resi}.png`; a.href=pngURL; a.click();
+
+/* ===== Download via Blob (kompatibel) ===== */
+function downloadPNGFile(pngURL, filename){
+  fetch(pngURL).then(res=>res.blob()).then(blob=>{
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }).catch(()=>{ const a=document.createElement('a'); a.href=pngURL; a.download=filename; a.click(); });
 }
 
 /* ===== LocalStorage ===== */
 const LS_KEY = 'labels';
-function getAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
-function setAll(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
+function getAll(){ if(!lsOK) return []; try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
+function setAll(arr){ if(!lsOK) return; localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
 function saveToLocal(){
   const rec = render();
+  if(!lsOK){ alert('LocalStorage tidak tersedia di browser ini. Aktifkan penyimpanan atau nonaktifkan mode private ketat.'); return; }
   const arr = getAll();
-  // idempotent via resi: update kalau resi sudah ada
   const i = arr.findIndex(x=>x.resi===rec.resi);
   if(i>=0) arr[i] = {...arr[i], ...rec};
   else arr.unshift(rec);
   setAll(arr);
-  alert(' Tersimpan di localStorage.');
-}
-function clearAll(){
-  if(confirm('Hapus seluruh riwayat localStorage?')){ localStorage.removeItem(LS_KEY); alert('Riwayat dihapus.'); loadHistory(true); }
+  alert('✅ Tersimpan di localStorage.');
 }
 
 /* ===== History ===== */
@@ -354,71 +381,83 @@ function rowHTML(d){
     <td>${d.service||'-'}</td>
     <td>
       <a href="${d.pngURL||'#'}" target="_blank" ${d.pngURL?'':'onclick="return false"'}>Buka</a>
-      � <a href="${d.pngURL||'#'}" ${d.pngURL?`download="label-${d.resi||'resi'}.png"`:'onclick="return false"'}>Unduh</a>
-      � <a href="#" data-print="${d.pngURL||''}">Cetak</a>
+      · <a href="${d.pngURL||'#'}" ${d.pngURL?`download="label-${d.resi||'resi'}.png"`:'onclick="return false"'}>Unduh</a>
+      · <a href="#" data-print="${d.pngURL||''}">Cetak</a>
     </td>
   </tr>`;
 }
 function loadHistory(reset=false){
   const tbody = document.querySelector('#histTable tbody');
+  if(!tbody) return;
   if(reset) tbody.innerHTML='';
   const arr = getAll();
-  arr.forEach(d=>{ if(!tbody.querySelector(`[data-resi="${d.resi}"]`)){ tbody.insertAdjacentHTML('beforeend', rowHTML(d)); }});
+  arr.forEach(d=>{ tbody.insertAdjacentHTML('beforeend', rowHTML(d)); });
 }
-document.querySelector('#histTable')?.addEventListener('click',(e)=>{
-  const a = e.target.closest('a[data-print]'); if(!a) return;
-  e.preventDefault();
-  const url = a.getAttribute('data-print');
-  if(!url){ alert('Belum ada gambar untuk dicetak.'); return; }
-  const paper = $('#paper').value;
-  const css=(paper==='a6')?'@page{size:A6;margin:0}img{width:105mm;height:148mm}':'@page{size:100mm 150mm;margin:0}img{width:100mm;height:150mm}';
-  const w=window.open('', '_blank', 'noopener');
-  w.document.write(`<html><head><meta charset="utf-8"><title>Print Label</title><style>html,body{margin:0}${css}</style></head><body><img src="${url}" onload="window.focus();window.print();" /></body></html>`); 
-  w.document.close();
+
+/* ===== Search di history ===== */
+document.getElementById('histSearch')?.addEventListener('input', ()=>{
+  const q = document.getElementById('histSearch').value.trim().toLowerCase();
+  document.querySelectorAll('#histTable tbody tr').forEach(tr=>{
+    tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
+  });
 });
 
-/* ===== Export / Import JSON ===== */
-$('#exportJson').addEventListener('click', ()=>{
+/* ===== Events ===== */
+const $on = (id,ev,fn)=>{ const el=document.getElementById(id); if(el) el.addEventListener(ev, fn); };
+
+$on('previewBtn','click',(e)=>{ e.preventDefault(); render(); });
+$on('quickResiBtn','click',(e)=>{ e.preventDefault(); document.getElementById('resi').value=makeResi(document.getElementById('courier').value); render(); });
+
+$on('printBtn','click',()=>{ const { pngURL } = render(); printPNG(pngURL); });
+$on('printBtn2','click',()=>{ const { pngURL } = render(); printPNG(pngURL); });
+$on('dlPngBtn','click',()=>{ const { pngURL, resi } = render(); downloadPNGFile(pngURL, `label-${resi}.png`); });
+$on('dlPngBtn2','click',()=>{ const { pngURL, resi } = render(); downloadPNGFile(pngURL, `label-${resi}.png`); });
+$on('saveLocalBtn','click',saveToLocal);
+$on('saveLocalBtn2','click',saveToLocal);
+$on('resetBtn','click',()=>{ if(!lsOK){ alert('LocalStorage tidak tersedia.'); return; } if(confirm('Hapus seluruh riwayat?')){ localStorage.removeItem(LS_KEY); loadHistory(true); alert('Riwayat dihapus.'); } });
+
+document.getElementById('previewCanvas')?.addEventListener('click', ()=>{ const { pngURL } = render(); printPNG(pngURL); });
+
+$on('tabMake','click',()=>{ document.getElementById('pageMake').classList.remove('hidden'); document.getElementById('pageHistory').classList.add('hidden'); document.getElementById('tabMake').classList.add('active'); document.getElementById('tabHistory').classList.remove('active'); });
+$on('tabHistory','click',()=>{ document.getElementById('pageMake').classList.add('hidden'); document.getElementById('pageHistory').classList.remove('hidden'); document.getElementById('tabMake').classList.remove('active'); document.getElementById('tabHistory').classList.add('active'); loadHistory(true); });
+
+$on('histRefresh','click',()=>loadHistory(true));
+$on('exportJson','click', ()=>{
+  if(!lsOK){ alert('LocalStorage tidak tersedia.'); return; }
   const data = getAll();
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download='labels.json'; a.click();
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
 });
-$('#importJson').addEventListener('change', async (e)=>{
+document.getElementById('importJson')?.addEventListener('change', async (e)=>{
   const file = e.target.files?.[0]; if(!file) return;
   const txt = await file.text();
   try{
     const incoming = JSON.parse(txt);
     if(!Array.isArray(incoming)) throw new Error('Format JSON tidak sesuai (harus array).');
-    const map = new Map((getAll().map(x=>[x.resi,x])));
+    const map = new Map(getAll().map(x=>[x.resi,x]));
     incoming.forEach(x=>{ if(x?.resi) map.set(x.resi, {...map.get(x.resi), ...x}); });
-    setAll(Array.from(map.values()).sort((a,b)=>new Date(b.date)-new Date(a.date)));
-    alert(' Import berhasil.');
+    const merged = Array.from(map.values()).sort((a,b)=>new Date(b.date)-new Date(a.date));
+    setAll(merged);
+    alert('✅ Import berhasil.');
     loadHistory(true);
   }catch(err){ alert('Gagal import: '+err.message); }
 });
 
-/* ===== Tabs & Events ===== */
-function showMake(){ $('#pageMake').classList.remove('hidden'); $('#pageHistory').classList.add('hidden'); $('#tabMake').classList.add('active'); $('#tabHistory').classList.remove('active'); }
-function showHistory(){ $('#pageMake').classList.add('hidden'); $('#pageHistory').classList.remove('hidden'); $('#tabMake').classList.remove('active'); $('#tabHistory').classList.add('active'); loadHistory(true); }
-$('#tabMake').addEventListener('click', showMake);
-$('#tabHistory').addEventListener('click', showHistory);
-$('#histRefresh').addEventListener('click', ()=>loadHistory(true));
+/* Cetak dari tabel riwayat */
+document.getElementById('histTable')?.addEventListener('click',(e)=>{
+  const a = e.target.closest('a[data-print]'); if(!a) return;
+  e.preventDefault();
+  const url = a.getAttribute('data-print');
+  if(!url) return alert('Belum ada gambar.');
+  printPNG(url);
+});
 
-$('#previewBtn').addEventListener('click', (e)=>{ e.preventDefault(); render(); });
-$('#quickResiBtn').addEventListener('click', (e)=>{ e.preventDefault(); $('#resi').value=makeResi($('#courier').value); render(); });
-$('#printBtn').addEventListener('click', printImage);
-$('#printBtn2').addEventListener('click', printImage);
-$('#dlPngBtn').addEventListener('click', downloadPNG);
-$('#dlPngBtn2').addEventListener('click', downloadPNG);
-$('#saveLocalBtn').addEventListener('click', saveToLocal);
-$('#saveLocalBtn2').addEventListener('click', saveToLocal);
-$('#previewCanvas').addEventListener('click', printImage);
-$('#resetBtn').addEventListener('click', clearAll);
-
-/* init */
+/* init awal */
 render();
+// buka langsung tab history jika pakai #history
+if(location.hash==='#history'){ document.getElementById('tabHistory').click(); }
 </script>
 </body>
 </html>
