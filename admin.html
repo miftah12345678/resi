@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin ResiKu</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0d10;--panel:#0f1318;--muted:#8b9bb3;--text:#e9eef7;--brand:#7c5cff;--brand2:#00e0a4;--border:rgba(255,255,255,.08);--danger:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);background:var(--bg)}
+.shell{max-width:980px;margin:40px auto;padding:0 16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px}
+h1{margin:0 0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,button{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text)}
+button{cursor:pointer}
+.btn-primary{background:linear-gradient(90deg,var(--brand),var(--brand2));border:none;color:#fff;font-weight:800}
+.table{width:100%;border-collapse:collapse;margin-top:14px}
+.table th,.table td{border-bottom:1px solid var(--border);padding:8px;text-align:left}
+.table th{color:var(--muted);font-weight:600}
+pre{white-space:pre-wrap;background:#081018;border:1px solid var(--border);padding:12px;border-radius:10px;max-height:360px;overflow:auto}
+.small{font-size:12px;color:var(--muted)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="card" id="loginCard">
+    <h1>Login Admin</h1>
+    <div class="row">
+      <input id="key" placeholder="Masukkan apikey/password">
+      <button id="btnLogin" class="btn-primary">Masuk</button>
+    </div>
+    <p class="small">Gunakan kunci untuk masuk : <b>********</b></p>
+  </div>
+
+  <div class="card hidden" id="adminCard">
+    <h1>Dashboard Admin</h1>
+    <div class="row" style="margin-bottom:10px">
+      <button id="btnExport">⬇️ Export JSON</button>
+      <label>⬆️ Import JSON
+        <input id="fileImport" type="file" accept="application/json" style="display:none">
+      </label>
+      <button id="btnShowJson">👁️ Tampilkan JSON</button>
+      <button id="btnClear" style="color:var(--danger);border-color:var(--danger)">🗑️ Hapus Semua</button>
+      <a href="resi-app.html" style="margin-left:auto">← Kembali ke App</a>
+    </div>
+
+    <div id="jsonBox" class="hidden">
+      <pre id="jsonPreview"></pre>
+    </div>
+
+    <table class="table" id="tbl">
+      <thead><tr><th>Tanggal</th><th>Resi</th><th>Brand</th><th>Kurir</th><th>Layanan</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="small">Sumber data: <code>localStorage.labels</code> pada browser/perangkat ini.</p>
+  </div>
+</div>
+
+<script>
+const LS_KEY='labels';
+const q=new URLSearchParams(location.search);
+
+// quick mode: ?mode=json&key=1sampai8 → tampilkan JSON langsung
+if(q.get('mode')==='json' && q.get('key')==='1sampai8'){
+  document.body.innerHTML='';
+  const data = JSON.parse(localStorage.getItem(LS_KEY)||'[]');
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='labels.json'; a.click();
+  const pre=document.createElement('pre'); pre.textContent = JSON.stringify(data,null,2);
+  document.body.appendChild(pre);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+} else {
+  // normal admin dashboard
+  const loginCard=document.getElementById('loginCard');
+  const adminCard=document.getElementById('adminCard');
+  document.getElementById('btnLogin').onclick=()=>{
+    const key=document.getElementById('key').value.trim();
+    if(key==='1sampai8'){
+      loginCard.classList.add('hidden');
+      adminCard.classList.remove('hidden');
+      loadTable();
+    }else{
+      alert('Kunci salah');
+    }
+  };
+
+  function getAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
+  function setAll(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
+
+  function loadTable(){
+    const tbody=document.querySelector('#tbl tbody'); tbody.innerHTML='';
+    getAll().forEach(d=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${d.date||'-'}</td><td>${d.resi||'-'}</td><td>${d.brand||'-'}</td><td>${d.courier||'-'}</td><td>${d.service||'-'}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById('btnExport').onclick=()=>{
+    const data = getAll();
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='labels.json'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+  document.getElementById('fileImport').addEventListener('change', async (e)=>{
+    const file=e.target.files?.[0]; if(!file) return;
+    const txt=await file.text();
+    try{
+      const incoming=JSON.parse(txt);
+      if(!Array.isArray(incoming)) throw new Error('Format JSON salah (harus array).');
+      const map=new Map(getAll().map(x=>[x.resi,x]));
+      incoming.forEach(x=>{ if(x?.resi) map.set(x.resi,{...map.get(x.resi),...x}); });
+      setAll(Array.from(map.values()));
+      alert('✅ Import selesai.');
+      loadTable();
+    }catch(err){ alert('Gagal import: '+err.message); }
+  });
+  document.getElementById('btnShowJson').onclick=()=>{
+    const box=document.getElementById('jsonBox');
+    const pre=document.getElementById('jsonPreview');
+    pre.textContent = JSON.stringify(getAll(), null, 2);
+    box.classList.toggle('hidden');
+  };
+  document.getElementById('btnClear').onclick=()=>{
+    if(confirm('Hapus semua riwayat pada perangkat ini?')){
+      localStorage.removeItem(LS_KEY);
+      loadTable();
+      alert('Riwayat dihapus.');
+    }
+  };
+}
+</script>
+</body>
+</html>

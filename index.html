@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ResiKu — Cetak Resi (LocalStorage)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0d10;--panel:#0f1318;--muted:#8b9bb3;--text:#e9eef7;--brand:#7c5cff;--brand2:#00e0a4;--border:rgba(255,255,255,.08);--danger:#ff6b6b;--shadow:0 12px 36px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);background:
+radial-gradient(900px 550px at 110% 10%, rgba(0,224,164,.12), transparent 50%),var(--bg);line-height:1.5}
+.topbar{position:sticky;top:0;z-index:20;display:flex;gap:10px;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--border)}
+.brand{font-weight:800}.brand .dot{color:var(--brand)}
+.nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tab{border:1px solid var(--border);background:transparent;color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer}
+.tab.active{background:linear-gradient(90deg,var(--brand),var(--brand2));border:none;color:#fff;font-weight:800}
+.container{max-width:1200px;margin:0 auto;padding:16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+.grid{display:grid;gap:16px;grid-template-columns:1.1fr .9fr}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:700px){.row{grid-template-columns:1fr}}
+label{display:grid;gap:6px;font-size:14px;margin-bottom:10px}
+input,textarea,select{background:transparent;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;outline:none}
+input[type=file]{padding:8px}
+textarea{min-height:88px;resize:vertical}
+button{border:1px solid var(--border);background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.04));color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.2s}
+button:hover{transform:translateY(-1px)}button:active{transform:translateY(0) scale(.98)}
+.btn-primary{background:linear-gradient(90deg,var(--brand),var(--brand2));border:none;color:#fff;font-weight:800}
+.btn-ghost{background:transparent;border-color:var(--border)}
+.btn-danger{border-color:var(--danger);color:var(--danger)}
+.small{font-size:12px;color:var(--muted)}
+.preview-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.preview-info{color:var(--muted);font-size:13px}
+.preview-box{display:grid;place-items:center;padding:8px}
+#previewCanvas{width:300px;height:450px;border-radius:12px;background:#fff;border:1px solid #ddd;box-shadow:0 10px 24px rgba(0,0,0,.35);cursor:zoom-in}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.center{text-align:center}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left}
+.table th{color:var(--muted);font-weight:600}
+.badge{display:inline-block;padding:3px 8px;border:1px solid var(--border);border-radius:999px;font-size:12px}
+.hidden{display:none !important}
+@media print{body>*:not(#printOnly){display:none !important}}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Resi<span class="dot">Ku</span> — Local</div>
+    <div class="nav">
+      <button class="tab active" id="tabMake">Buat Label</button>
+      <button class="tab" id="tabHistory">Riwayat</button>
+      <span style="flex:1"></span>
+      <a href="admin.html" class="btn-ghost"> Admin</a>
+      <button id="saveLocalBtn" class="btn-ghost"> Simpan</button>
+      <button id="printBtn" class="btn-ghost"> Cetak</button>
+      <button id="dlPngBtn" class="btn-ghost"> PNG</button>
+      <button id="resetBtn" class="btn-danger"> Reset Riwayat</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- ================== PAGE: MAKE ================== -->
+    <div id="pageMake">
+      <div class="grid">
+        <!-- FORM -->
+        <section class="card">
+          <h2 style="margin:.2em 0">Data Pengiriman</h2>
+
+          <h3 style="margin:12px 0 6px">Brand</h3>
+          <div class="row">
+            <label>Nama Store / ResiKu
+              <input id="brandName" placeholder="Contoh: Ham Store">
+            </label>
+            <label>Logo (opsional)
+              <input id="brandLogo" type="file" accept="image/*">
+            </label>
+          </div>
+
+          <!-- QR TRACKING DIHAPUS, QR RESI TETAP DICETAK -->
+
+          <h3 style="margin:12px 0 6px">Pengirim</h3>
+          <div class="row">
+            <label>Nama Pengirim
+              <input id="senderName" placeholder="Nama Toko / Nama Anda">
+            </label>
+            <label>No. Telp Pengirim
+              <input id="senderPhone" placeholder="08xxxxxxxxxx">
+            </label>
+          </div>
+          <label>Alamat Pengirim
+            <textarea id="senderAddress" placeholder="Jalan, No, RT/RW, Kel/Desa, Kec, Kota, Provinsi, Kode Pos"></textarea>
+          </label>
+
+          <h3 style="margin:16px 0 6px">Penerima</h3>
+          <div class="row">
+            <label>Nama Penerima
+              <input id="buyerName" placeholder="Contoh: Andi Saputra">
+            </label>
+            <label>No. WhatsApp Penerima
+              <input id="buyerPhone" placeholder="08xxxxxxxxxx">
+            </label>
+          </div>
+          <label>Alamat Penerima
+            <textarea id="buyerAddress" placeholder="Jalan, No, RT/RW, Kel/Desa, Kec, Kota, Provinsi, Kode Pos"></textarea>
+          </label>
+
+          <div class="row">
+            <label>Kurir
+              <select id="courier">
+                <option>JNE</option><option>J&amp;T</option><option>SiCepat</option>
+                <option>POS Indonesia</option><option>AnterAja</option><option>Wahana</option>
+              </select>
+            </label>
+            <label>Layanan
+              <select id="service">
+                <option>REG</option><option>YES</option><option>ECO</option><option>COD</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row">
+            <label>Jumlah Item
+              <input id="items" type="number" min="1" value="1">
+            </label>
+            <label>Berat (gram)
+              <input id="weight" type="number" min="1" value="500">
+            </label>
+          </div>
+
+          <label>Catatan (opsional)
+            <input id="note" placeholder="Patokan, jam kirim, dll.">
+          </label>
+
+          <div class="row">
+            <label>Ukuran Kertas Saat Cetak (PC)
+              <select id="paper">
+                <option value="10x15" selected>Thermal 10×15 cm</option>
+                <option value="a6">A6 (10.5×14.8 cm)</option>
+              </select>
+            </label>
+            <label>Nomor Resi (otomatis bila kosong)
+              <input id="resi" placeholder="Biarkan kosong untuk auto">
+            </label>
+          </div>
+
+          <div class="actions" style="justify-content:flex-end">
+            <button id="previewBtn" class="btn-primary">Perbarui Preview</button>
+          </div>
+          <p class="small center">Langkah: Perbarui Preview  ketuk gambar preview  Cetak / Download / Simpan.</p>
+        </section>
+
+        <!-- PREVIEW -->
+        <section class="card">
+          <div class="preview-head">
+            <h2 style="margin:0">Preview Label</h2>
+            <div class="actions">
+              <button id="quickResiBtn" class="btn-ghost"> Auto Resi</button>
+              <button id="printBtn2"> Cetak</button>
+              <button id="dlPngBtn2" class="btn-ghost"> PNG</button>
+              <button id="saveLocalBtn2" class="btn-ghost"> Simpan</button>
+            </div>
+          </div>
+          <div class="preview-info">Klik gambar di bawah untuk cetak cepat.</div>
+          <div class="preview-box">
+            <canvas id="previewCanvas" width="1000" height="1500" title="Ketuk untuk Cetak"></canvas>
+          </div>
+        </section>
+      </div>
+
+      <div class="card center small">
+        PC: pilih kertas <b>100×150 mm</b> atau <b>A6</b> saat print. HP: gunakan <b>Download PNG</b> agar proporsional.
+      </div>
+    </div>
+
+    <!-- ================== PAGE: HISTORY ================== -->
+    <div id="pageHistory" class="hidden">
+      <section class="card">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+          <input id="histSearch" placeholder="Cari resi / brand..." style="flex:1 1 240px">
+          <button id="histRefresh" class="btn-ghost"> Refresh</button>
+          <button id="exportJson" class="btn-ghost"> Export JSON</button>
+          <label class="btn-ghost" style="cursor:pointer"> Import JSON
+            <input id="importJson" type="file" accept="application/json" style="display:none">
+          </label>
+        </div>
+        <div class="table-wrap">
+          <table class="table" id="histTable">
+            <thead>
+              <tr><th>Tanggal</th><th>Resi</th><th>Brand</th><th>Kurir</th><th>Layanan</th><th>Aksi</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="small">Riwayat tersimpan di <code>localStorage.labels</code> (hilang jika cache dibersihkan).</p>
+      </section>
+    </div>
+  </div>
+
+<div id="printOnly"></div>
+
+<!-- ====== qrcode.js mini (untuk QR RESI) ====== -->
+<script>
+/*! qrcode.js v1.0.0 (MIT) | https://github.com/davidshimjs/qrcodejs */
+!function(o){function r(o){this.mode=t.MODE_8BIT_BYTE,this.data=o}function e(o,r){this.typeNumber=o,this.errorCorrectLevel=r,this.modules=null,this.moduleCount=0,this.dataCache=null,this.dataList=[]}function n(){this.buffer=[],this.length=0}function i(){var o=0,r=0,e=0,n=new Array;return{get:function(){if(e>=o){var i=0;for(r=0;r<256;r++)i^=Math.random()*256|0;n=t.getBCHDigit(i)<<24|i,e=0,o=32}var a=1&n>>o;return o++,a}}}var t=function(){var o=function(o){var r=0;for(;0!=o;)r++,o>>>=1;return r};return{stringToBytes:function(o){for(var r=[],e=0;e<o.length;e++){var n=o.charCodeAt(e);n<128?r.push(n):n<2048?(r.push(192|(n>>6&31)),r.push(128|(63&n))):n<55296||n>=57344?(r.push(224|(n>>12&15)),r.push(128|(n>>6&63)),r.push(128|(63&n))):(e++,n=65536+((1023&n)<<10|1023&o.charCodeAt(e)),r.push(240|(n>>18&7)),r.push(128|(n>>12&63)),r.push(128|(n>>6&63)),r.push(128|(63&n)))}return r},getBCHDigit:o,MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8,ErrorCorrectLevel:{L:1,M:0,Q:3,H:2}}}();r.prototype={getLength:function(){return t.stringToBytes(this.data).length},write:function(o){for(var r=t.stringToBytes(this.data),e=0;e<r.length;e++)o.put(r[e],8)}};var a={PATTERN_POSITION_TABLE:[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],G15:1335,G18:7973,G15_MASK:21522,getBCHDigit:function(o){for(var r=0;0!=o;)r++,o>>>=1;return r},getPatternPosition:function(o){return a.PATTERN_POSITION_TABLE[o-1]},maskPattern:function(o,r,e){switch(o){case 0:return(r+e)%2==0;case 1:return r%2==0;case 2:return e%3==0;case 3:return(r+e)%3==0;case 4:return(Math.floor(r/2)+Math.floor(e/3))%2==0;case 5:return r*e%2+ r*e%3==0;case 6:return (r*e%2 + r*e%3)%2==0;case 7:return ((r*e%3 + (r+e)%2)%2)==0;default:throw new Error("bad maskPattern:"+o)}},getErrorCorrectPolynomial:function(o){for(var r=new s([1],0),e=0;e<o;e++)r=r.multiply(new s([1,d.gexp(e)],0));return r},getLengthInBits:function(o,r){if(1<=r&&r<10)switch(o){case t.MODE_NUMBER:return 10;case t.MODE_ALPHA_NUM:return 9;case t.MODE_8BIT_BYTE:return 8;case t.MODE_KANJI:return 8;default:throw new Error("mode:"+o)}else if(r<27)switch(o){case t.MODE_NUMBER:return 12;case t.MODE_ALPHA_NUM:return 11;case t.MODE_8BIT_BYTE:return 16;case t.MODE_KANJI:return 10;default:throw new Error("mode:"+o)}}};n.prototype={get:function(o){var r=Math.floor(o/8);return 1==(this.buffer[r]>>>7-o%8&1)},put:function(o,r){for(var e=0;e<r;e++)this.putBit(1==(o>>>r-e-1&1))},getLengthInBits:function(){return this.length},putBit:function(o){this.buffer[this.length>>3]|=o?128>>>(this.length&7):0,this.length++}};o.QRCode=e}(window);
+</script>
+
+<!-- ====== APP SCRIPT (LocalStorage) ====== -->
+<script>
+/* ===== Utilities ===== */
+const $ = (s,el=document)=>el.querySelector(s);
+const C = $('#previewCanvas');
+const CTX = C.getContext('2d',{willReadFrequently:true});
+const fmtDate = d => d.toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
+const rand = (n=12)=>Array.from(crypto.getRandomValues(new Uint8Array(n))).map(b=>(b%36).toString(36)).join('').toUpperCase();
+function makeResi(prefix){ const p=(prefix||'JNE').replace(/[^A-Z]/gi,'').slice(0,3).toUpperCase(); return p+'-'+rand(4)+'-'+rand(6); }
+function mulberry32(a){return function(){var t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
+CanvasRenderingContext2D.prototype.rrect=function(x,y,w,h,r=10){this.beginPath();this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();}
+function wrapText(ctx, text, x, y, maxW, lh){ if(!text)return y; const words=String(text).split(/\s+/); let line=''; for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW){ctx.fillText(line,x,y);y+=lh;line=w;}else line=t;} if(line){ctx.fillText(line,x,y);y+=lh;} return y; }
+function drawBarcode(ctx, code, x, y, width, height){ const seed=[...code].reduce((a,c)=>a+c.charCodeAt(0),0); const rnd=mulberry32(seed); let curX=x; while(curX<x+width){ const w=Math.min(1+Math.floor(rnd()*4),x+width-curX); const h=height-(4+Math.floor(rnd()*12)); ctx.fillRect(curX,y+(height-h),w,h); curX+=w+(1+Math.floor(rnd()*2)); } }
+function drawQR(ctx, text, x, y, size){
+  const tmp = document.createElement('div');
+  new window.QRCode(tmp,{ text, width:size, height:size, correctLevel:QRCode.CorrectLevel.M });
+  const cvs = tmp.querySelector('canvas');
+  if (cvs) ctx.drawImage(cvs, x, y, size, size);
+}
+
+/* ===== Logo input ===== */
+let brandLogoImg=null;
+$('#brandLogo').addEventListener('change',(e)=>{const f=e.target.files?.[0]; if(!f){brandLogoImg=null; return;} const img=new Image(); img.onload=()=>{brandLogoImg=img; render();}; img.src=URL.createObjectURL(f);});
+
+/* ===== Render ===== */
+function render(){
+  const brand = $('#brandName').value.trim() || 'ResiKu';
+  const sName = $('#senderName').value.trim() || '—';
+  const sPhone= $('#senderPhone').value.trim() || '—';
+  const sAddr = $('#senderAddress').value.trim() || '—';
+  const bName = $('#buyerName').value.trim() || '—';
+  const bPhone= $('#buyerPhone').value.trim() || '—';
+  const bAddr = $('#buyerAddress').value.trim() || '—';
+  const courier = $('#courier').value;
+  const service = $('#service').value;
+  const items = Math.max(1,+($('#items').value||1));
+  const weight= Math.max(1,+($('#weight').value||1));
+  const note = $('#note').value.trim() || '-';
+  let resi = $('#resi').value.trim(); if(!resi){ resi=makeResi(courier); $('#resi').value=resi; }
+  const codeRaw = resi.replaceAll('-','');
+
+  // canvas bg
+  CTX.clearRect(0,0,C.width,C.height);
+  CTX.fillStyle='#fff'; CTX.fillRect(0,0,C.width,C.height);
+  // border
+  CTX.strokeStyle='#ddd'; CTX.lineWidth=2; CTX.rrect(20,20,960,1460,24); CTX.stroke();
+
+  // header
+  const pad=40, logoSize=60;
+  if(brandLogoImg){ CTX.save(); CTX.beginPath(); CTX.rrect(pad,pad,logoSize,logoSize,10); CTX.clip(); CTX.drawImage(brandLogoImg,pad,pad,logoSize,logoSize); CTX.restore(); }
+  else { const g=CTX.createLinearGradient(pad,pad,pad+logoSize,pad+logoSize); g.addColorStop(0,'#7C5CFF'); g.addColorStop(1,'#00E0A4'); CTX.fillStyle=g; CTX.rrect(pad,pad,logoSize,logoSize,10); CTX.fill(); }
+  let f=32; CTX.fillStyle='#000'; CTX.font=`700 ${f}px Inter, Arial`; while(CTX.measureText(brand).width>500 && f>18){ f--; CTX.font=`700 ${f}px Inter, Arial`; }
+  const textX=pad+logoSize+15; CTX.fillText(brand, textX, pad+35);
+  CTX.font='400 20px Inter, Arial'; CTX.fillStyle='#444'; CTX.fillText('label pengiriman', textX, pad+65);
+
+  CTX.textAlign='right'; CTX.fillStyle='#000'; CTX.font='800 36px Inter, Arial'; CTX.fillText(courier, 900, pad+42);
+  CTX.font='700 18px Inter, Arial'; CTX.strokeStyle='#bbb'; CTX.rrect(900-60,pad+50,60,28,8); CTX.stroke();
+  CTX.textAlign='center'; CTX.fillStyle='#000'; CTX.fillText(service, 900-30, pad+70);
+  CTX.textAlign='left';
+
+  // receiver & sender
+  const boxY=130, boxH=280, gutter=20, colW=(960-pad*2-gutter)/2;
+  CTX.rrect(pad,boxY,colW,boxH,14); CTX.stroke();
+  CTX.font='700 22px Inter, Arial'; CTX.fillStyle='#000'; CTX.fillText('Penerima', pad+16, boxY+34);
+  CTX.font='600 24px Inter, Arial'; CTX.fillText(bName, pad+16, boxY+70);
+  CTX.font='400 18px Inter, Arial'; CTX.fillStyle='#333'; CTX.fillText(bPhone, pad+16, boxY+100);
+  CTX.fillStyle='#111'; CTX.font='400 18px Inter, Arial'; wrapText(CTX, bAddr, pad+16, boxY+130, colW-32, 24);
+
+  const x2=pad+colW+gutter;
+  CTX.fillStyle='#000'; CTX.rrect(x2,boxY,colW,boxH,14); CTX.stroke();
+  CTX.font='700 22px Inter, Arial'; CTX.fillText('Pengirim', x2+16, boxY+34);
+  CTX.font='600 24px Inter, Arial'; CTX.fillText(sName, x2+16, boxY+70);
+  CTX.font='400 18px Inter, Arial'; CTX.fillStyle='#333'; CTX.fillText(sPhone, x2+16, boxY+100);
+  CTX.fillStyle='#111'; CTX.font='400 18px Inter, Arial'; wrapText(CTX, sAddr, x2+16, boxY+130, colW-32, 24);
+
+  // resi + meta
+  const midY=boxY+boxH+20, leftW=colW, rightW=colW;
+  CTX.fillStyle='#000'; CTX.rrect(pad,midY,leftW,150,14); CTX.stroke();
+  CTX.font='700 18px Inter, Arial'; CTX.fillText('No. Resi', pad+16, midY+32);
+  CTX.font='800 28px "Courier New", ui-monospace, monospace';
+  let rf=28; while(CTX.measureText(resi).width > leftW-32 && rf>20){ rf--; CTX.font=`800 ${rf}px "Courier New", ui-monospace, monospace`; } CTX.fillText(resi, pad+16, midY+76);
+
+  const metaX=pad+leftW+gutter; CTX.rrect(metaX,midY,rightW,150,14); CTX.stroke();
+  const now=fmtDate(new Date()); CTX.font='700 18px Inter, Arial'; CTX.fillText('Tanggal', metaX+16, midY+32);
+  CTX.textAlign='right'; CTX.font='600 18px Inter, Arial'; CTX.fillText(now, metaX+rightW-16, midY+32);
+  CTX.textAlign='left';  CTX.font='700 18px Inter, Arial'; CTX.fillText('Item', metaX+16, midY+70);
+  CTX.textAlign='right'; CTX.font='600 18px Inter, Arial'; CTX.fillText(items+' pcs', metaX+rightW-16, midY+70);
+  CTX.textAlign='left';  CTX.font='700 18px Inter, Arial'; CTX.fillText('Berat', metaX+16, midY+108);
+  CTX.textAlign='right'; CTX.font='600 18px Inter, Arial'; CTX.fillText(weight+' g', metaX+rightW-16, midY+108);
+  CTX.textAlign='left';  CTX.font='700 18px Inter, Arial'; CTX.fillText('Catatan', metaX+16, midY+146);
+  CTX.textAlign='right'; CTX.font='600 18px Inter, Arial'; const noteTrim = note.length>40 ? note.slice(0,37)+'…' : note; CTX.fillText(noteTrim, metaX+rightW-16, midY+146);
+  CTX.textAlign='left';
+
+  // divider + barcode
+  CTX.strokeStyle='#d6d6d6'; CTX.setLineDash([6,6]); CTX.beginPath(); CTX.moveTo(pad, midY+170); CTX.lineTo(960-pad, midY+170); CTX.stroke(); CTX.setLineDash([]);
+  const bcY=midY+190; CTX.fillStyle='#000';
+  drawBarcode(CTX, codeRaw, pad, bcY, 960-2*pad, 120);
+  CTX.font='700 20px "Courier New", ui-monospace, monospace'; CTX.textAlign='center'; CTX.fillText(codeRaw, 500, bcY+140); CTX.textAlign='left';
+
+  // QR RESI (isi QR = teks nomor resi), pojok kanan bawah
+  const size=180, x=960-40-size, y=1460-size-24;
+  drawQR(CTX, resi, x, y, size);
+
+  return { pngURL: C.toDataURL('image/png'), resi, courier, service, brand, items, weight, note, date: now };
+}
+
+/* ===== Print & Download ===== */
+function printImage(){
+  const { pngURL } = render();
+  const paper = $('#paper').value;
+  const css = (paper==='a6') ? '@page{size:A6;margin:0}img{width:105mm;height:148mm}' : '@page{size:100mm 150mm;margin:0}img{width:100mm;height:150mm}';
+  const w = window.open('', '_blank', 'noopener');
+  w.document.write(`<html><head><meta charset="utf-8"><title>Print Label</title><style>html,body{margin:0}${css}</style></head><body><img src="${pngURL}" onload="window.focus();window.print();" /></body></html>`); 
+  w.document.close();
+}
+function downloadPNG(){
+  const { pngURL, resi } = render();
+  const a=document.createElement('a'); a.download=`label-${resi}.png`; a.href=pngURL; a.click();
+}
+
+/* ===== LocalStorage ===== */
+const LS_KEY = 'labels';
+function getAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
+function setAll(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
+function saveToLocal(){
+  const rec = render();
+  const arr = getAll();
+  // idempotent via resi: update kalau resi sudah ada
+  const i = arr.findIndex(x=>x.resi===rec.resi);
+  if(i>=0) arr[i] = {...arr[i], ...rec};
+  else arr.unshift(rec);
+  setAll(arr);
+  alert(' Tersimpan di localStorage.');
+}
+function clearAll(){
+  if(confirm('Hapus seluruh riwayat localStorage?')){ localStorage.removeItem(LS_KEY); alert('Riwayat dihapus.'); loadHistory(true); }
+}
+
+/* ===== History ===== */
+function rowHTML(d){
+  return `<tr>
+    <td>${d.date||'-'}</td>
+    <td><span class="badge">${d.resi||'-'}</span></td>
+    <td>${d.brand||'-'}</td>
+    <td>${d.courier||'-'}</td>
+    <td>${d.service||'-'}</td>
+    <td>
+      <a href="${d.pngURL||'#'}" target="_blank" ${d.pngURL?'':'onclick="return false"'}>Buka</a>
+      · <a href="${d.pngURL||'#'}" ${d.pngURL?`download="label-${d.resi||'resi'}.png"`:'onclick="return false"'}>Unduh</a>
+      · <a href="#" data-print="${d.pngURL||''}">Cetak</a>
+    </td>
+  </tr>`;
+}
+function loadHistory(reset=false){
+  const tbody = document.querySelector('#histTable tbody');
+  if(reset) tbody.innerHTML='';
+  const arr = getAll();
+  arr.forEach(d=>{ if(!tbody.querySelector(`[data-resi="${d.resi}"]`)){ tbody.insertAdjacentHTML('beforeend', rowHTML(d)); }});
+}
+document.querySelector('#histTable')?.addEventListener('click',(e)=>{
+  const a = e.target.closest('a[data-print]'); if(!a) return;
+  e.preventDefault();
+  const url = a.getAttribute('data-print');
+  if(!url){ alert('Belum ada gambar untuk dicetak.'); return; }
+  const paper = $('#paper').value;
+  const css=(paper==='a6')?'@page{size:A6;margin:0}img{width:105mm;height:148mm}':'@page{size:100mm 150mm;margin:0}img{width:100mm;height:150mm}';
+  const w=window.open('', '_blank', 'noopener');
+  w.document.write(`<html><head><meta charset="utf-8"><title>Print Label</title><style>html,body{margin:0}${css}</style></head><body><img src="${url}" onload="window.focus();window.print();" /></body></html>`); 
+  w.document.close();
+});
+
+/* ===== Export / Import JSON ===== */
+$('#exportJson').addEventListener('click', ()=>{
+  const data = getAll();
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='labels.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+});
+$('#importJson').addEventListener('change', async (e)=>{
+  const file = e.target.files?.[0]; if(!file) return;
+  const txt = await file.text();
+  try{
+    const incoming = JSON.parse(txt);
+    if(!Array.isArray(incoming)) throw new Error('Format JSON tidak sesuai (harus array).');
+    const map = new Map((getAll().map(x=>[x.resi,x])));
+    incoming.forEach(x=>{ if(x?.resi) map.set(x.resi, {...map.get(x.resi), ...x}); });
+    setAll(Array.from(map.values()).sort((a,b)=>new Date(b.date)-new Date(a.date)));
+    alert(' Import berhasil.');
+    loadHistory(true);
+  }catch(err){ alert('Gagal import: '+err.message); }
+});
+
+/* ===== Tabs & Events ===== */
+function showMake(){ $('#pageMake').classList.remove('hidden'); $('#pageHistory').classList.add('hidden'); $('#tabMake').classList.add('active'); $('#tabHistory').classList.remove('active'); }
+function showHistory(){ $('#pageMake').classList.add('hidden'); $('#pageHistory').classList.remove('hidden'); $('#tabMake').classList.remove('active'); $('#tabHistory').classList.add('active'); loadHistory(true); }
+$('#tabMake').addEventListener('click', showMake);
+$('#tabHistory').addEventListener('click', showHistory);
+$('#histRefresh').addEventListener('click', ()=>loadHistory(true));
+
+$('#previewBtn').addEventListener('click', (e)=>{ e.preventDefault(); render(); });
+$('#quickResiBtn').addEventListener('click', (e)=>{ e.preventDefault(); $('#resi').value=makeResi($('#courier').value); render(); });
+$('#printBtn').addEventListener('click', printImage);
+$('#printBtn2').addEventListener('click', printImage);
+$('#dlPngBtn').addEventListener('click', downloadPNG);
+$('#dlPngBtn2').addEventListener('click', downloadPNG);
+$('#saveLocalBtn').addEventListener('click', saveToLocal);
+$('#saveLocalBtn2').addEventListener('click', saveToLocal);
+$('#previewCanvas').addEventListener('click', printImage);
+$('#resetBtn').addEventListener('click', clearAll);
+
+/* init */
+render();
+</script>
+</body>
+</html>
